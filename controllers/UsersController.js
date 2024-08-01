@@ -1,5 +1,7 @@
+import { ObjectId } from 'mongodb';
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
+import userUtils from '../utils/user';
 
 class UsersController {
   // Creates a user given an email and password
@@ -28,6 +30,19 @@ class UsersController {
     }
 
     return res.status(201).json({ id: newUser.insertedId, email });
+  }
+
+  // should retrieve the user base on the token used
+  static async getMe(req, res) {
+    const { userId } = await userUtils.getUserIdAndKey(req);
+
+    const user = await userUtils.getUser({
+      _id: ObjectId(userId),
+    });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    return res.status(200).json({ id: user._id.toString(), email: user.email });
   }
 }
 
