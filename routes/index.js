@@ -1,5 +1,6 @@
 import express from 'express';
 import AppController from '../controllers/AppController';
+import UsersController from '../controllers/UsersController';
 
 const routing = (app) => {
   const router = express.Router();
@@ -13,6 +14,11 @@ const routing = (app) => {
   // should return the number of users and files in DB
   router.get('/stats', (req, res) => {
     AppController.getStats(req, res);
+  });
+
+  // should create a new user in DB
+  router.post('/users', (req, res) => {
+    UsersController.postNew(req, res);
   });
 };
 
