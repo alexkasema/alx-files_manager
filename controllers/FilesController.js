@@ -127,6 +127,28 @@ class FilesController {
 
     return res.status(200).json(fileList);
   }
+
+  // should set isPublic to true on the file document based on the ID
+  static async putPublish(req, res) {
+    const { error, code, updatedFile } = await fileUtils.publicStatus(
+      req, true,
+    );
+
+    if (error) return res.status(code).send({ error });
+
+    return res.status(code).json(updatedFile);
+  }
+
+  // should set isPublic to false on the file document based on the ID
+  static async putUnpublish(req, res) {
+    const { error, code, updatedFile } = await fileUtils.publicStatus(
+      req, false,
+    );
+
+    if (error) return res.status(code).send({ error });
+
+    return res.status(code).json(updatedFile);
+  }
 }
 
 export default FilesController;
