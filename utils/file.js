@@ -62,6 +62,12 @@ const fileUtils = {
     return file;
   },
 
+  // gets the files that have the same parent id
+  async getFilesOfParentId(query) {
+    const files = await dbClient.filesCollection.aggregate(query);
+    return files;
+  },
+
   // save files to database and disk
   async saveFile(userId, fileParams, FOLDER_PATH) {
     const {
