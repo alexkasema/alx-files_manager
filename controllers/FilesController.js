@@ -1,10 +1,13 @@
 import { ObjectId } from 'mongodb';
 import mime from 'mime-types';
+import Queue from 'bull';
 import userUtils from '../utils/user';
 import basicUtils from '../utils/basic';
 import fileUtils from '../utils/file';
 
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
+
+const fileQueue = new Queue('fileQueue');
 
 class FilesController {
   // should create a new file in DB and in disk.
@@ -13,6 +16,10 @@ class FilesController {
 
     if (!basicUtils.isValidId(userId)) {
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!userId && req.body.type === 'image') {
+      await fileQueue.add({});
     }
 
     const user = await userUtils.getUser({
@@ -40,6 +47,13 @@ class FilesController {
 
     if (error) {
       return res.status(code).json(error);
+    }
+
+    if (fileParams.type === 'image') {
+      await fileQueue.add({
+        fileId: newFile.id.toString(),
+        userId: newFile.userId.toString(),
+      });
     }
 
     return res.status(201).json(newFile);
