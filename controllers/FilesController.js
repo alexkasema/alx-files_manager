@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb';
+import mime from 'mime-types';
 import userUtils from '../utils/user';
 import basicUtils from '../utils/basic';
 import fileUtils from '../utils/file';
@@ -148,6 +149,41 @@ class FilesController {
     if (error) return res.status(code).send({ error });
 
     return res.status(code).json(updatedFile);
+  }
+
+  // should return the content of the file document based on the ID
+  static async getFile(req, res) {
+    const { id: fileId } = req.params;
+
+    const { userId } = await userUtils.getUserIdAndKey(req);
+
+    const size = req.query.size || 0;
+
+    if (!basicUtils.isValidId(fileId)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const file = await fileUtils.getFile({
+      _id: ObjectId(fileId),
+    });
+
+    if (!file || !fileUtils.isOwnerAndPublic(file, userId)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    if (file.type === 'folder') {
+      return res.status(400).json({ error: "A folder doesn't have content" });
+    }
+
+    const { error, code, data } = await fileUtils.getFileData(file, size);
+
+    if (error) return res.status(code).json(error);
+
+    const mimeType = mime.contentType(file.name);
+
+    res.setHeader('Content-Type', mimeType);
+
+    return res.status(200).json(data);
   }
 }
 
