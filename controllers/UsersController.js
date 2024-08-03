@@ -1,7 +1,10 @@
 import { ObjectId } from 'mongodb';
 import sha1 from 'sha1';
+import Queue from 'bull';
 import dbClient from '../utils/db';
 import userUtils from '../utils/user';
+
+const userQueue = new Queue('userQueue');
 
 class UsersController {
   // Creates a user given an email and password
@@ -26,8 +29,13 @@ class UsersController {
         password: sha1Password,
       });
     } catch (err) {
+      await userQueue.add({});
       return res.status(500).json({ error: 'Error creating user.' });
     }
+
+    await userQueue.add({
+      userId: newUser.insertedId.toString(),
+    });
 
     return res.status(201).json({ id: newUser.insertedId, email });
   }
